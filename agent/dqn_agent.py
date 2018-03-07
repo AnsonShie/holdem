@@ -154,7 +154,7 @@ class dqnModel():
         _stateCards = self.__turn_observation_to_stateJust52(state, playerid)
         print("Test State => ", _stateCards)
         # print("Test State => ", self.__turn_observation_to_state(state, playerid))
-        # input("pause")
+        self.sameSuit(_stateCards)
         if state.community_state.to_call > 0:
             if random.random() > 0.7 :
                 return ACTION(action_table.FOLD, 0)
@@ -177,9 +177,11 @@ class dqnModel():
             return False
 
     def sameSuit(self, _stateCards):
-        x = np.array(_stateCards[:53])
+        x = np.array(_stateCards[:52])
         print(x)
-        print(np.where(x == 1))
+        _index = np.where(x == 1)
+        for i in _index:
+            print(i)
         
         input("pause")
 
