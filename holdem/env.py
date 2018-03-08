@@ -23,7 +23,12 @@
 from gym import Env, error, spaces, utils
 from gym.utils import seeding
 
-from treys import Card, Deck, Evaluator
+# from treys import Card, Deck, Evaluator
+import sys
+sys.path.append('/Users/championFu//ML_project/treys/treys')
+from evaluator import Evaluator
+from card import Card
+from deck import Deck
 
 from .player import Player
 from .utils import hand_to_str, format_action, PLAYER_STATE, COMMUNITY_STATE, STATE

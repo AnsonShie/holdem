@@ -19,7 +19,14 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-from treys import Card
+
+# from treys import Card
+import sys
+sys.path.append('/Users/championFu//ML_project/treys/treys')
+from evaluator import Evaluator
+from card import Card
+from deck import Deck
+
 from collections import namedtuple
 
 PLAYER_STATE = namedtuple('player_state', ['emptyplayer', 'seat', 'stack', 'playing_hand', 'handrank', 'playedthisround', 'betting', 'isallin', 'lastsidepot', 'reloadCount', 'hand'])

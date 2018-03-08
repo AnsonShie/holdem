@@ -1,10 +1,15 @@
 from collections import namedtuple
 from enum import Enum
 from holdem import PLAYER_STATE, COMMUNITY_STATE, STATE, ACTION, action_table, card_to_normal_str
-import random
+import random 
 
-from treys import Evaluator
+# from treys import Evaluator, Card, Deck
 import numpy as np
+import sys
+sys.path.append('/Users/championFu//ML_project/treys/treys')
+from evaluator import Evaluator
+from card import Card
+from deck import Deck
 # from keras.models import Sequential
 # from keras.layers import Dense
 # from keras.optimizers import Adam, RMSprop
@@ -147,26 +152,63 @@ class dqnModel():
     def loadModel(self, path):
         return
 
+    def evaluateFromState(self, state, playerid):
+        # print("state",state.player_states[playerid].hand) 
+        evaluator = Evaluator()
+        hand = []
+        board = []
+        # p1_score = evaluator.evaluate(board, player1_hand)
+        for i in state.player_states[playerid].hand:
+            hand.append(Card.new(card_to_normal_str(i)))
+            # print(card_to_normal_str(i))
+            # print(hand)
+
+        for j in state.community_card:
+            if j != -1:
+                # print(card_to_normal_str(j))
+                board.append(Card.new(card_to_normal_str(j)))
+                # print(board)
+
+        if len(board) == 0:
+            rank = evaluator.evaluate(hand, [])
+        elif len(board) == 3: 
+            rank = evaluator.evaluate(hand, board[:3])
+        elif len(board) == 4:
+            rank = evaluator.evaluate(hand, board[:4])
+        elif len(board) == 5:
+            rank = evaluator.evaluate(hand, board[:5])
+        rank_class = evaluator.get_rank_class(rank)
+        class_string = evaluator.class_to_string(rank_class)
+        percentage = 1.0 - evaluator.get_five_card_rank_percentage(rank)  # higher better here
+        print("Player hand = {}, percentage rank among all hands = {}".format(class_string, percentage))
+        return [rank,percentage]
+
     def takeAction(self, state, playerid):
         ''' (Predict/ Policy) Select Action under state'''
         # print("state => ",state)
         # print("playerid => ",playerid)
+        rank, percentage = self.evaluateFromState(state, playerid)
         _stateCards = self.__turn_observation_to_stateJust52(state, playerid)
         print("Test State => ", _stateCards)
-        # print("Test State => ", self.__turn_observation_to_state(state, playerid))
-        self.sameSuit(_stateCards)
-        if state.community_state.to_call > 0:
-            if random.random() > 0.7 :
-                return ACTION(action_table.FOLD, 0)
-            else:
-                return ACTION(action_table.CALL, state.community_state.to_call)
-        else:
-            if random.random() > 0.7:
-                return ACTION(action_table.RAISE, 50)
-            elif random.random() > 0.9:
+
+        if state.community_card[0] == -1:
+            if percentage > 0:
                 return ACTION(action_table.RAISE, state.player_states[playerid].stack)
             else:
-                return ACTION(action_table.CHECK, 0)
+                if random.random() > 0.5 :
+                    return ACTION(action_table.FOLD, 0)
+                else:
+                    return ACTION(action_table.CALL, state.community_state.to_call)
+        else:
+            if percentage > 0.7:
+                return ACTION(action_table.RAISE, state.player_states[playerid].stack)
+            elif percentage > 0.5:
+                return ACTION(action_table.RAISE, 50)
+            elif percentage > 0.3:
+                return ACTION(action_table.CALL, state.community_state.to_call)
+            else:
+                return ACTION(action_table.FOLD, 0)
+
 
     def getReload(self, state):
         '''return `True` if reload is needed under state, otherwise `False`'''

@@ -5,7 +5,12 @@ from websocket import create_connection
 import hashlib
 from .utils import hand_to_str, format_action, PLAYER_STATE, COMMUNITY_STATE, STATE, ACTION, action_table, card_str_to_list
 from .player import Player
-from treys import Card, Deck, Evaluator
+
+import sys
+sys.path.append('/Users/championFu//ML_project/treys/treys')
+from evaluator import Evaluator
+from card import Card
+from deck import Deck
 
 ACCEPTED_ACTION = ["bet", "call", "raise", "check", "fold", "allin"]
 
