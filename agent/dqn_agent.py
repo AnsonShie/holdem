@@ -48,9 +48,9 @@ class dqnModel():
 
         # total 367 states
         # self._state = [0] * 52 * 2 + [0] * 52 * 5 + [0] *3 # { my 2 card (one hot), community 5 card (one hot), total_pot, my_stack, to_call) ]
-        self.state = [0] * 52 + [0] * 3 + [0] * 2  # 57
+        self.state = [0] * 52 + [0] * 2 + [0] * 2  # 56
         # add new initial
-        self.action_size = 4
+        self.action_size = 2
         self.gamma = 0.99    # discount rate
         self.epsilon = 1  # exploration rate
         self.learning_rate = 0.001
@@ -78,7 +78,7 @@ class dqnModel():
     def _build_model(self):
         model = Sequential()
 
-        model.add(Dense(30, input_dim=57))
+        model.add(Dense(30, input_dim=len(self.state)))
         model.add(Dense(10, input_dim=30))
         model.add(Dense(self.action_size, input_dim=10))
 
@@ -124,7 +124,7 @@ class dqnModel():
                self.__turn_card_to_one_hot(community_card[4])+ \
                [total_pot, my_stack, to_call]
 
-    def turn_observation_to_stateJust52(self, observation, playerid):
+    def turn_observation_to_stateJust52_plus2dim(self, observation, playerid):
         card_hot = [0]*52
         my_card = observation.player_states[playerid].hand
         for i in my_card:
@@ -134,8 +134,7 @@ class dqnModel():
             card_hot = self.__turn_card_to_one_hot_returnIndx(i, card_hot)
         my_stack = observation.player_states[playerid].stack
         total_pot = observation.community_state.totalpot
-        to_call = observation.community_state.to_call
-        return card_hot + [total_pot, my_stack, to_call]
+        return card_hot + [total_pot, my_stack]
 
 
     def __turn_card_to_one_hot_returnIndx(self, card, card_hot):
@@ -190,7 +189,7 @@ class dqnModel():
         rank_class = evaluator.get_rank_class(rank)
         class_string = evaluator.class_to_string(rank_class)
         percentage = 1.0 - evaluator.get_five_card_rank_percentage(rank)  # higher better here
-        print("Player hand = {}, percentage rank among all hands = {}".format(class_string, percentage))
+        # print("Player hand = {}, percentage rank among all hands = {}".format(class_string, percentage))
         return [rank,percentage]
 
     def takeAction(self, state, playerid):
@@ -199,20 +198,20 @@ class dqnModel():
         # print("playerid => ",playerid)
 
         rank, percentage = self.evaluateFromState(state, playerid)
-        _stateCards = self.turn_observation_to_stateJust52(state, playerid)
-        _stateCards.append(rank)
-        _stateCards.append(percentage)
+        # _stateCards = self.turn_observation_to_stateJust52_plus2dim(state, playerid)
+        # _stateCards.append(rank)
+        # _stateCards.append(percentage)
 
         if state.community_card[0] == -1:
             if percentage > 0:
                 return ACTION(action_table.RAISE, state.player_states[playerid].stack)
             else:
-                if random.random() > 0.5 :
+                if random.random() > 0.3 :
                     return ACTION(action_table.FOLD, 0)
                 else:
                     return ACTION(action_table.CALL, state.community_state.to_call)
         else:
-            if percentage > 0.7:
+            if percentage > 0.8:
                 return ACTION(action_table.RAISE, state.player_states[playerid].stack)
             elif percentage > 0.5:
                 return ACTION(action_table.RAISE, 50)
@@ -239,5 +238,19 @@ class dqnModel():
         
         input("pause")
 
-    def test(self):
-        print("test function")
+    def train(self,memory):
+        # len(memory[0]) = 4
+        # memory[0][0] state, memory[0][1] action, memory[0][2] reward, memory[0][3] next_state
+
+        # one sample
+        target = self.model.predict(np.array(memory[0][0][0]).reshape(1,56))
+        t = self.target_model.predict(np.array(memory[0][3][0]).reshape(1,56))
+
+        # target = [[ 109.50458527  605.85266113]]
+        print(memory[0][2])
+        print(memory[0][1][0])
+        print(t)
+        print(np.argmax(t))
+        target[0][memory[0][1][0]] = memory[0][2] + self.gamma * (t[0][np.argmax(t)])
+
+        self.model.fit(np.array(memory[0][0][0]).reshape(1,56), target, epochs=1, verbose=0)
