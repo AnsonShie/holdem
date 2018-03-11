@@ -10,11 +10,12 @@ sys.path.append('/Users/championFu//ML_project/treys/treys')
 from evaluator import Evaluator
 from card import Card
 from deck import Deck
-# from keras.models import Sequential
-# from keras.layers import Dense
-# from keras.optimizers import Adam, RMSprop
-# from keras import backend as K
-# from keras.losses import binary_crossentropy
+from collections import deque
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.optimizers import Adam, RMSprop
+from keras import backend as K
+from keras.losses import binary_crossentropy
 
 CHAR_SUIT_TO_INT = {
         's': 0,  # spades
@@ -46,15 +47,24 @@ class dqnModel():
         self.model = {"seed":831}
 
         # total 367 states
-        self._state = [0] * 52 * 2 + [0] * 52 * 5 + [0] *3 # { my 2 card (one hot), community 5 card (one hot), total_pot, my_stack, to_call) ]
+        # self._state = [0] * 52 * 2 + [0] * 52 * 5 + [0] *3 # { my 2 card (one hot), community 5 card (one hot), total_pot, my_stack, to_call) ]
+        self.state = [0] * 52 + [0] * 3 + [0] * 2  # 57
         # add new initial
         self.action_size = 4
+        self.gamma = 0.99    # discount rate
+        self.epsilon = 1  # exploration rate
         self.learning_rate = 0.001
-        # self.model = self._build_model()
-        # self.target_model = self._build_model()
-        
+        self.epsilon_min = 0.05
+        self.epsilon_decay = 0.95/1000000
+        self.memory = deque(maxlen=10000)
+        self.learning_rate = 0.0001
+        self.model = self._build_model()
+        self.target_model = self._build_model()
+        self.update_target_model()
 
-        # self.update_target_model()
+    def update_target_model(self):
+        # copy weights from model to target_model
+            self.target_model.set_weights(self.model.get_weights())
 
     def _huber_loss(self, target, prediction):
         # sqrt(1+error^2)-1
@@ -65,18 +75,18 @@ class dqnModel():
     #     # copy weights from model to target_model
     #     self.target_model.load_weights('breakout_pass.h5')
 
-    # def _build_model(self):
-    #     model = Sequential()
+    def _build_model(self):
+        model = Sequential()
 
-    #     model.add(Dense(100, input_dim=784))
-    #     model.add(Dense(50, input_dim=100))
-    #     model.add(Dense(self.action_size, input_dim=50))
+        model.add(Dense(30, input_dim=57))
+        model.add(Dense(10, input_dim=30))
+        model.add(Dense(self.action_size, input_dim=10))
 
-    #     opt = Adam(lr=self.learning_rate)
-    #     #opt=RMSprop(lr=self.learning_rate,decay=0.99)
-    #     model.compile(loss=self._huber_loss, optimizer=opt)
-    #     model.summary()
-    #     return model
+        opt = Adam(lr=self.learning_rate)
+        #opt=RMSprop(lr=self.learning_rate,decay=0.99)
+        model.compile(loss=self._huber_loss, optimizer=opt)
+        model.summary()
+        return model
 
     def __turn_card_to_one_hot(self, card):
         if card == -1:
@@ -114,7 +124,7 @@ class dqnModel():
                self.__turn_card_to_one_hot(community_card[4])+ \
                [total_pot, my_stack, to_call]
 
-    def __turn_observation_to_stateJust52(self, observation, playerid):
+    def turn_observation_to_stateJust52(self, observation, playerid):
         card_hot = [0]*52
         my_card = observation.player_states[playerid].hand
         for i in my_card:
@@ -187,9 +197,11 @@ class dqnModel():
         ''' (Predict/ Policy) Select Action under state'''
         # print("state => ",state)
         # print("playerid => ",playerid)
+
         rank, percentage = self.evaluateFromState(state, playerid)
-        _stateCards = self.__turn_observation_to_stateJust52(state, playerid)
-        print("Test State => ", _stateCards)
+        _stateCards = self.turn_observation_to_stateJust52(state, playerid)
+        _stateCards.append(rank)
+        _stateCards.append(percentage)
 
         if state.community_card[0] == -1:
             if percentage > 0:
@@ -227,4 +239,5 @@ class dqnModel():
         
         input("pause")
 
-
+    def test(self):
+        print("test function")

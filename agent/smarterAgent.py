@@ -72,7 +72,7 @@ class smarterModel():
 
     def takeAction(self, state, playerid):
         ''' (Predict/ Policy) Select Action under state'''
-        print("Test State : ", self.__turn_observation_to_state(state, playerid))
+        # print("Test State : ", self.__turn_observation_to_state(state, playerid))
         if state.community_state.to_call > 0:
             if random.random() > 0.7 :
                 return ACTION(action_table.FOLD, 0)

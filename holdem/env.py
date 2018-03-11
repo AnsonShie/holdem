@@ -242,13 +242,12 @@ class TexasHoldemEnv(Env, utils.EzPickle):
     return self._get_current_step_returns(terminal)
 
   def render(self, mode='human', close=False):
+    print()
     print('Cycle {}, total pot: {}'.format(self._cycle, self._totalpot))
     if self._last_actions is not None:
       pid = self._last_player.player_id
       print('last action by player {}:'.format(pid) + '\t' + format_action(self._last_player, self._last_actions[pid]))
-
     state = self._get_current_state()
-
     #(player_infos, player_hands) = zip(*state.player_state)
 
     print('community:')
@@ -276,6 +275,9 @@ class TexasHoldemEnv(Env, utils.EzPickle):
       self._turn()
     elif self._round == 3:
       self._river()
+
+  def _get_round_number(self):
+    return self._round
 
   def _increment_blinds(self):
     self._blind_index = min(self._blind_index + 1, len(TexasHoldemEnv.BLIND_INCREMENTS) - 1)
