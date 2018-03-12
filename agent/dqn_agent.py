@@ -243,14 +243,17 @@ class dqnModel():
         # memory[0][0] state, memory[0][1] action, memory[0][2] reward, memory[0][3] next_state
 
         # one sample
+        # using model predict cur state
         target = self.model.predict(np.array(memory[0][0][0]).reshape(1,56))
+        # using target_model predict next state
         t = self.target_model.predict(np.array(memory[0][3][0]).reshape(1,56))
 
         # target = [[ 109.50458527  605.85266113]]
-        print(memory[0][2])
-        print(memory[0][1][0])
-        print(t)
-        print(np.argmax(t))
+        # print(memory[0][2])
+        # print(memory[0][1][0])
+        # print(t)
+        # print(np.argmax(t))
+        # update cur_action = reward + gamma * best_action of next_state of target_model
         target[0][memory[0][1][0]] = memory[0][2] + self.gamma * (t[0][np.argmax(t)])
 
         self.model.fit(np.array(memory[0][0][0]).reshape(1,56), target, epochs=1, verbose=0)
