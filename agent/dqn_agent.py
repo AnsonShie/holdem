@@ -218,7 +218,7 @@ class dqnModel():
         #     else:
         #         return ACTION(action_table.FOLD, 0)
 
-        action = self.target_model.predict(np.array(_stateCards).reshape(1,self.state_dim))
+        action = self.model.predict(np.array(_stateCards).reshape(1,self.state_dim))
         best_action = np.argmax(action)
         if best_action == 0:
             # play the game, CALL
