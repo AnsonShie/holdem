@@ -49,6 +49,7 @@ class dqnModel():
         # total 367 states
         # self._state = [0] * 52 * 2 + [0] * 52 * 5 + [0] *3 # { my 2 card (one hot), community 5 card (one hot), total_pot, my_stack, to_call) ]
         self.state = [0] * 52 + [0] * 2 + [0] * 2  # 56
+        self.state_dim = 56
         # add new initial
         self.action_size = 2
         self.gamma = 0.99    # discount rate
@@ -64,16 +65,12 @@ class dqnModel():
 
     def update_target_model(self):
         # copy weights from model to target_model
-            self.target_model.set_weights(self.model.get_weights())
+        self.target_model.set_weights(self.model.get_weights())
 
     def _huber_loss(self, target, prediction):
         # sqrt(1+error^2)-1
         error = prediction - target
         return K.mean(K.sqrt(1+K.square(error))-1, axis=-1)
-
-    # def update_target_model(self):
-    #     # copy weights from model to target_model
-    #     self.target_model.load_weights('breakout_pass.h5')
 
     def _build_model(self):
         model = Sequential()
@@ -198,28 +195,37 @@ class dqnModel():
         # print("playerid => ",playerid)
 
         rank, percentage = self.evaluateFromState(state, playerid)
-        # _stateCards = self.turn_observation_to_stateJust52_plus2dim(state, playerid)
-        # _stateCards.append(rank)
-        # _stateCards.append(percentage)
+        _stateCards = self.turn_observation_to_stateJust52_plus2dim(state, playerid)
+        _stateCards.append(rank)
+        _stateCards.append(percentage)
 
-        if state.community_card[0] == -1:
-            if percentage > 0:
-                return ACTION(action_table.RAISE, state.player_states[playerid].stack)
-            else:
-                if random.random() > 0.3 :
-                    return ACTION(action_table.FOLD, 0)
-                else:
-                    return ACTION(action_table.CALL, state.community_state.to_call)
+        # expert and probability rule
+        # if state.community_card[0] == -1:
+        #     if percentage > 0:
+        #         return ACTION(action_table.RAISE, state.player_states[playerid].stack)
+        #     else:
+        #         if random.random() > 0.3 :
+        #             return ACTION(action_table.FOLD, 0)
+        #         else:
+        #             return ACTION(action_table.CALL, state.community_state.to_call)
+        # else:
+        #     if percentage > 0.8:
+        #         return ACTION(action_table.RAISE, state.player_states[playerid].stack)
+        #     elif percentage > 0.5:
+        #         return ACTION(action_table.RAISE, 50)
+        #     elif percentage > 0.3:
+        #         return ACTION(action_table.CALL, state.community_state.to_call)
+        #     else:
+        #         return ACTION(action_table.FOLD, 0)
+
+        action = self.target_model.predict(np.array(_stateCards).reshape(1,self.state_dim))
+        best_action = np.argmax(action)
+        if best_action == 0:
+            # play the game, CALL
+            return ACTION(action_table.CALL, state.community_state.to_call)
         else:
-            if percentage > 0.8:
-                return ACTION(action_table.RAISE, state.player_states[playerid].stack)
-            elif percentage > 0.5:
-                return ACTION(action_table.RAISE, 50)
-            elif percentage > 0.3:
-                return ACTION(action_table.CALL, state.community_state.to_call)
-            else:
-                return ACTION(action_table.FOLD, 0)
-
+            # not play the game, FOLD
+            return ACTION(action_table.FOLD, 0)
 
     def getReload(self, state):
         '''return `True` if reload is needed under state, otherwise `False`'''
@@ -239,21 +245,20 @@ class dqnModel():
         input("pause")
 
     def train(self,memory):
+        print("TRAIN!!!!!!!!!!!!!!!")
         # len(memory[0]) = 4
         # memory[0][0] state, memory[0][1] action, memory[0][2] reward, memory[0][3] next_state
 
         # one sample
         # using model predict cur state
-        target = self.model.predict(np.array(memory[0][0][0]).reshape(1,56))
+        target = self.model.predict(np.array(memory[0][0][0]).reshape(1,self.state_dim))
         # using target_model predict next state
-        t = self.target_model.predict(np.array(memory[0][3][0]).reshape(1,56))
+        t = self.target_model.predict(np.array(memory[0][3][0]).reshape(1,self.state_dim))
 
         # target = [[ 109.50458527  605.85266113]]
-        # print(memory[0][2])
-        # print(memory[0][1][0])
-        # print(t)
-        # print(np.argmax(t))
         # update cur_action = reward + gamma * best_action of next_state of target_model
         target[0][memory[0][1][0]] = memory[0][2] + self.gamma * (t[0][np.argmax(t)])
 
-        self.model.fit(np.array(memory[0][0][0]).reshape(1,56), target, epochs=1, verbose=0)
+        self.model.fit(np.array(memory[0][0][0]).reshape(1,self.state_dim), target, epochs=1, verbose=0)
+        print("TRAIN FINISH!!!!!!!!!!!!!!!")
+
