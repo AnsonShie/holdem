@@ -30,7 +30,6 @@ def lets_play(env, n_seats, model_list):
   memory = deque(maxlen=10000)
   def model_saveMemory(state, action, reward, next_state):
     memory.append((state, action, reward, next_state))  
-    print(memory)
 
   # for dqn_model parameter
   dqnModel_id = 0
@@ -113,10 +112,10 @@ def lets_play(env, n_seats, model_list):
           break
         else:
           reward = cur_state.player_states[dqnModel_id].stack - begin_money 
-          print("stateT_list:",stateT_list)
-          print("action:",actionList)
-          print("stateT1_list:",stateT1_list)
-          print("reward:",reward)
+          # print("stateT_list:",stateT_list)
+          # print("action:",actionList)
+          # print("stateT1_list:",stateT1_list)
+          # print("reward:",reward)
           model_saveMemory(stateT_list, actionList, reward, stateT1_list)
         # input("pause")
         print("Finish this game")

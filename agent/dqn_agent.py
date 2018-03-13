@@ -75,7 +75,7 @@ class dqnModel():
     def _build_model(self):
         model = Sequential()
 
-        model.add(Dense(30, input_dim=len(self.state)))
+        model.add(Dense(30, input_dim=self.state_dim))
         model.add(Dense(10, input_dim=30))
         model.add(Dense(self.action_size, input_dim=10))
 
@@ -241,8 +241,6 @@ class dqnModel():
         _index = np.where(x == 1)
         for i in _index:
             print(i)
-        
-        input("pause")
 
     def train(self,memory):
         print("TRAIN!!!!!!!!!!!!!!!")
@@ -254,7 +252,6 @@ class dqnModel():
         target = self.model.predict(np.array(memory[0][0][0]).reshape(1,self.state_dim))
         # using target_model predict next state
         t = self.target_model.predict(np.array(memory[0][3][0]).reshape(1,self.state_dim))
-
         # target = [[ 109.50458527  605.85266113]]
         # update cur_action = reward + gamma * best_action of next_state of target_model
         target[0][memory[0][1][0]] = memory[0][2] + self.gamma * (t[0][np.argmax(t)])
