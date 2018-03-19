@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 import json
 from websocket import create_connection
+from websocket._exceptions import WebSocketConnectionClosedException
 import hashlib
 from .utils import hand_to_str, format_action, PLAYER_STATE, COMMUNITY_STATE, STATE, ACTION, action_table, card_str_to_list
 from .player import Player
@@ -97,7 +98,6 @@ class ClientPlayer():
                 int(player.stack),
                 int(player.playing_hand),
                 int(player.handrank),
-                int(player.playedthisround),
                 int(player.betting),
                 int(player.isallin),
                 int(player.lastsidepot),
@@ -107,19 +107,20 @@ class ClientPlayer():
             player_states.append(player_features)
 
         community_states = COMMUNITY_STATE(
+            int(self._round),
             int(self._button),
             int(self._smallblind),
             int(self._bigblind),
             int(self._totalpot),
             int(self._lastraise),
             int(max(self._bigblind, self._lastraise + self._tocall)),
-            int(self._tocall - self._player_dict[my_seat].currentbet),
+            int(self._tocall),
             int(my_seat)
         )
         return STATE(tuple(player_states), community_states, self._pad(self.community, 5, -1))
 
     def render(self, mode='human', close=False):
-        print('Cycle {}, total pot: {} >>>>>>>>>>>>>'.format(self._cycle, self._totalpot))
+        print('Cycle {}, total pot: {} >>>'.format(self._cycle, self._totalpot))
         if self._last_action is not None:
             print('last action by player {} with action {}'.format(self._last_player, self._last_action))
         state = self.get_current_state()
@@ -130,7 +131,7 @@ class ClientPlayer():
         for idx, playerstate in enumerate(state.player_states):
             if playerstate.emptyplayer == False:
                 print('{}{}stack: {}'.format(idx, hand_to_str(playerstate.hand, mode), self._seats[idx].stack))
-        print("<<<<<<<<<<<")
+        print("<<<")
 
     def _reset(self):
         for player_info in self._seats:
@@ -206,16 +207,17 @@ class ClientPlayer():
             }))
         return
 
-    def _player_bet(self, player, total_bet):
+    def _player_bet(self, player, player_bet):
         # relative_bet = bet on this round, not accumulative
-        safe_bet = min(player.stack, total_bet)
-        player.bet(safe_bet)
+        total_bet = min(player.stack, player_bet) + player.currentbet
+        self._totalpot += (total_bet - player.currentbet)
 
-        self._totalpot += safe_bet
+        player.bet(total_bet) #  update acumulative bet (not add another bet)
+
         self._tocall = max(self._tocall, total_bet)
         if self._tocall > 0:
             self._tocall = max(self._tocall, self._bigblind)
-        self._lastraise = max(self._lastraise, safe_bet)
+        self._lastraise = max(self._lastraise, total_bet  - self._lastraise)
 
     def _handle_event(self, msg, data):
         if self._debug:
@@ -523,7 +525,7 @@ class ClientPlayer():
 
             if self._playing_live:
                 print("[LIVE] Cycle End")
-                self.render(mode='human')
+                self.render(mode='machine')
             self._reset()
             return False # not interesting
 
@@ -555,7 +557,13 @@ class ClientPlayer():
                 terminal = self._handle_event(msg["eventName"], msg["data"])
                 if terminal:
                     break
+
             print("[Message] Game Over")
+            try:
+                self.ws.close()
+            except WebSocketConnectionClosedException:
+                print("[ERROR] WebSocketConnectionClosedException, ignore")
+                pass
         except IOError as e: # TODO: find better way to handle exception
             print("[ERROR] Failed to doListern(): ", str(e))
             self.doListen()
