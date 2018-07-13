@@ -73,11 +73,12 @@ if __name__ == "__main__":
     model_list.append(agent.allFoldModel()) #2
     model_list.append(agent.allFoldModel()) #3
     model_list.append(agent.allFoldModel()) #4
-    model_list.append(agent.sarsa2Model()) #5
+    #model_list.append(agent.sarsa2Model()) #5
     model_list.append(agent.allCallModel()) #6
     model_list.append(agent.allFoldModel()) #7
     model_list.append(agent.allRaiseModel()) #8
-    model_list.append(agent.sarsaModel()) #9
+    #model_list.append(agent.sarsaModel()) #9
+    model_list.append(agent.dqnModel()) #10
     
     try:
         model_list[5].loadModel("sarsa5.npy")
@@ -89,7 +90,7 @@ if __name__ == "__main__":
     log_iterval = 500
     log_stacks = np.zeros(10)
     stacks = np.zeros(10)
-    n_episode = 0
+    n_episode = 1
     start_time = time.time()
     
     try:
@@ -114,5 +115,5 @@ if __name__ == "__main__":
     print("Elapsed time: {}, per episode {}".format(etime, float(etime)/n_episode))
     print(stacks/n_episode)
 
-    model_list[5].saveModel("sarsa5.npy")
-    model_list[9].saveModel("sarsa9.npy")
+    model_list[0].saveModel("sarsa5.npy")
+    model_list[1].saveModel("sarsa9.npy")

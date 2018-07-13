@@ -1,6 +1,32 @@
-# TrendMicro CoreTech Allhands Holdem Competetion Training Tool 
+# Trend Micro (趨勢科技) 2018 Global AI Warm-up game Texas Hold'em Contest
 
-## known issue
+## Environment and library
+Ubuntu 16.04
+Python 3.5.2
+Tensorflow
+Keras
+
+## Installation
+```sh
+# better run under virtualenv
+git clone https://github.com/chuangtc/treys.git
+git clone https://github.com/chuangtc/holdem.git
+sudo su -
+pip install gym
+pip install websocket-client
+pip install git+https://github.com/chuangtc/treys
+pip install keras
+pip install tensorflow
+pip install clr
+pip install keyboard
+```
+
+## 使用方法
+- web_example: enviroment為 Trend Micro Server
+- web_example.py: modify SERVER_URI, and modify name to your favorite bot_name
+- arena.py: environment為 gym
+
+## Known issue
 + sidepot
 
 ## OpenAI Gym
@@ -33,18 +59,6 @@
 4. 回合(ROUND)): 一回合是指所有玩家依次take action, 稱為一回合, 一個回合中有多個(分別來自各個玩家的)action
 5. action(STEP): 一個action是指輪到某一個玩家 call/raise/check/fold/~~bet~~/~~allin~~ 玩家通過 AI 客戶端完成其中一種決策稱之為一個action
 
-## 安裝方法
-```sh
-# better run under virtualenv
-git clone https://github.com/chuchuhao/holdem.git
-pip install gym
-pip install websocket-client
-pip install git+https://github.com/chuchuhao/treys # 若非 windows環境可以直接 pip install treys
-```
-
-## 使用方法
-- local_example: environment為 gym
-- web_example: enviroment為 Trend Micro Server
 
 ### Agent需要提供的 interface
 Agent必須為一個 class並且提供下面兩個 method

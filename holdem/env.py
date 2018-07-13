@@ -26,7 +26,7 @@ from gym.utils import seeding
 
 # from treys import Card, Deck, Evaluator
 import sys
-sys.path.append('/Users/championFu//ML_project/treys/treys')
+sys.path.append('/mnt/d/workspace/poker/treys/treys')
 from evaluator import Evaluator
 from card import Card
 from deck import Deck

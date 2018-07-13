@@ -8,7 +8,7 @@ from .utils import hand_to_str, format_action, PLAYER_STATE, COMMUNITY_STATE, ST
 from .player import Player
 
 import sys
-sys.path.append('/Users/championFu//ML_project/treys/treys')
+sys.path.append('/mnt/d/workspace/poker/treys/treys')
 from evaluator import Evaluator
 from card import Card
 from deck import Deck
@@ -92,6 +92,9 @@ class ClientPlayer():
 
         my_seat = self.__getPlayerSeatByName(self._name)
         for player in self._seats:
+            if ~hasattr(player, 'betting'):
+                player.betting=0
+
             player_features = PLAYER_STATE(
                 int(player.emptyplayer),
                 int(player.get_seat()),
@@ -553,7 +556,14 @@ class ClientPlayer():
                 result = self.ws.recv()
                 if self._debug:
                     print("[DEBUG] recv: {}".format(result))
-                msg = json.loads(result)
+
+                try:
+                    msg = json.loads(result)
+                except Exception:
+                    msg = dict()
+                    msg ["eventName"]="__show_action"
+                    msg["data"]="__show_action"
+
                 terminal = self._handle_event(msg["eventName"], msg["data"])
                 if terminal:
                     break
