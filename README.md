@@ -9,15 +9,13 @@ Keras
 ## Installation
 ```sh
 # better run under virtualenv
-git clone https://github.com/chuangtc/treys.git
-git clone https://github.com/chuangtc/holdem.git
+git clone https://github.com/AnsonShie/holdem.git
 sudo su -
 pip install gym
 pip install websocket-client
-pip install git+https://github.com/chuangtc/treys
+pip install git+https://github.com/AnsonShie/treys
 pip install keras
 pip install tensorflow
-pip install clr
 pip install keyboard
 ```
 
