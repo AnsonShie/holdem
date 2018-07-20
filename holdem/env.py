@@ -26,10 +26,10 @@ from gym.utils import seeding
 
 # from treys import Card, Deck, Evaluator
 import sys
-sys.path.append('/mnt/d/workspace/poker/treys/treys')
-from evaluator import Evaluator
-from card import Card
-from deck import Deck
+#sys.path.append('/mnt/d/workspace/poker/treys/treys')
+from treys import Evaluator
+from treys import Card
+from treys import Deck
 
 from .player import Player
 from .utils import hand_to_str, format_action, PLAYER_STATE, COMMUNITY_STATE, STATE

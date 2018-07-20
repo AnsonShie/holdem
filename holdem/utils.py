@@ -22,10 +22,10 @@
 
 # from treys import Card
 import sys
-sys.path.append('/mnt/d/workspace/poker/treys/treys')
-from evaluator import Evaluator
-from card import Card
-from deck import Deck
+#sys.path.append('/mnt/d/workspace/poker/treys/treys')
+from treys import Evaluator
+from treys import Card
+from treys import Deck
 
 from collections import namedtuple
 

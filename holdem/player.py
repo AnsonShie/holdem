@@ -26,10 +26,10 @@ from gym import error
 
 # from treys import Card
 import sys
-sys.path.append('/mnt/d/workspace/poker/treys/treys')
-from evaluator import Evaluator
-from card import Card
-from deck import Deck
+#sys.path.append('/mnt/d/workspace/poker/treys/treys')
+from treys import Evaluator
+from treys import Card
+from treys import Deck
 
 
 class Player(object):
@@ -110,12 +110,12 @@ class Player(object):
         raise_amount = int(raise_amount)
         action_idx = int(action_idx)
 
-        if tocall == 0:
-            if action_idx not in [Player.CHECK, Player.RAISE]:
-                raise error.Error('invalid action ({}) must be check (0), raise (2)'.format(action_idx))
-        else:
-            if action_idx not in [Player.RAISE, Player.CALL, Player.FOLD]:
-                raise error.Error('invalid action ({}) must be raise (2), call (1), or fold (3)'.format(action_idx))
+        #if tocall == 0:
+        #    if action_idx not in [Player.CHECK, Player.RAISE]:
+        #        raise error.Error('invalid action ({}) must be check (0), raise (2)'.format(action_idx))
+        #else:
+        #    if action_idx not in [Player.RAISE, Player.CALL, Player.FOLD]:
+        #        raise error.Error('invalid action ({}) must be raise (2), call (1), or fold (3)'.format(action_idx))
                 
         if action_idx == Player.RAISE:
             if self._roundRaiseCount >= self._roundRaiseLimit:

@@ -8,10 +8,10 @@ from .utils import hand_to_str, format_action, PLAYER_STATE, COMMUNITY_STATE, ST
 from .player import Player
 
 import sys
-sys.path.append('/mnt/d/workspace/poker/treys/treys')
-from evaluator import Evaluator
-from card import Card
-from deck import Deck
+#sys.path.append('/mnt/d/workspace/poker/treys/treys')
+from treys import Evaluator
+from treys import Card
+from treys import Deck
 
 ACCEPTED_ACTION = ["bet", "call", "raise", "check", "fold", "allin"]
 

@@ -6,10 +6,10 @@ import random
 # from treys import Evaluator, Card, Deck
 import numpy as np
 import sys
-sys.path.append('/Users/championFu//ML_project/treys/treys')
-from evaluator import Evaluator
-from card import Card
-from deck import Deck
+#sys.path.append('/Users/championFu//ML_project/treys/treys')
+from treys import Evaluator
+from treys import Card
+from treys import Deck
 from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense

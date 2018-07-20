@@ -73,16 +73,14 @@ if __name__ == "__main__":
     model_list.append(agent.allFoldModel()) #2
     model_list.append(agent.allFoldModel()) #3
     model_list.append(agent.allFoldModel()) #4
-    #model_list.append(agent.sarsa2Model()) #5
-    model_list.append(agent.allCallModel()) #6
-    model_list.append(agent.allFoldModel()) #7
+    model_list.append(agent.allCallModel()) #5
+    model_list.append(agent.allFoldModel()) #6
+    model_list.append(agent.allRaiseModel()) #7
     model_list.append(agent.allRaiseModel()) #8
-    #model_list.append(agent.sarsaModel()) #9
-    model_list.append(agent.dqnModel()) #10
+    model_list.append(agent.dqnModel()) #9
     
     try:
-        model_list[5].loadModel("sarsa5.npy")
-        model_list[9].loadModel("sarsa9.npy")
+        model_list[9].loadModel()
     except:
         pass
 
@@ -102,8 +100,7 @@ if __name__ == "__main__":
             if n_episode % log_iterval == 0:
                 print(log_stacks/log_iterval)
                 log_stacks.fill(0.0)
-                model_list[5].saveModel("sarsa5.npy")
-                model_list[9].saveModel("sarsa9.npy")
+                model_list[9].saveModel()
             if keyboard.is_pressed('q'):
                 print("Interrupt by key. n_episode = {}".format(n_episode))
                 break
@@ -115,5 +112,4 @@ if __name__ == "__main__":
     print("Elapsed time: {}, per episode {}".format(etime, float(etime)/n_episode))
     print(stacks/n_episode)
 
-    model_list[0].saveModel("sarsa5.npy")
-    model_list[1].saveModel("sarsa9.npy")
+    model_list[9].saveModel()
