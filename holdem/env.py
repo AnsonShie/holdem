@@ -126,8 +126,10 @@ class TexasHoldemEnv(Env, utils.EzPickle):
         self._side_pots = [0] * self.n_seats
         self._current_sidepot = 0 # index of _side_pots
         self._totalpot = 0
+        self._totalpreroundpot = 0
         self._tocall = 0
         self._lastraise = 0
+        self._num_not_fold_player = 0
 
         
         self._current_player = None
@@ -173,8 +175,8 @@ class TexasHoldemEnv(Env, utils.EzPickle):
             player.sitting_out = True
 
     def new_cycle(self):
-        self._reset_game()
         self._ready_players()
+        self._reset_game()
         self._cycle += 1
         if self._cycle %  self.n_seats == 0:
             self._increment_blinds()
@@ -221,6 +223,7 @@ class TexasHoldemEnv(Env, utils.EzPickle):
             raise error.Error('Rounds already finished, needs to go new_cycle.')
 
         players = [p for p in self._seats if p.playing_hand]
+        self._num_not_fold_player = len(players)
         if len(players) == 1:
             # raise error.Error('Round cannot be played with one player.')
             terminal = True
@@ -252,6 +255,11 @@ class TexasHoldemEnv(Env, utils.EzPickle):
                 self.round_holder = self._current_player.player_id
         elif move[0] == 'raise':
             bet_increment = self._player_bet(self._current_player, move[1]+self._tocall)
+            if self._debug:
+                print('[DEBUG] Player', self._current_player.player_id, move)
+            self.round_holder = self._current_player.player_id
+        elif move[0] == 'bet':
+            bet_increment = self._player_bet(self._current_player, max(move[1], self._tocall + 1))
             if self._debug:
                 print('[DEBUG] Player', self._current_player.player_id, move)
             self.round_holder = self._current_player.player_id
@@ -427,6 +435,7 @@ class TexasHoldemEnv(Env, utils.EzPickle):
             player._roundRaiseCount = 0
             self.round_holder = -1
         self._round += 1
+        self._totalpreroundpot = self._totalpot
         #self._tocall = 0
         self._lastraise = 0
         self._roundpot = 0
@@ -436,6 +445,8 @@ class TexasHoldemEnv(Env, utils.EzPickle):
         if len(players) == 1:
             players[0].refund(sum(self._side_pots))
             self._totalpot = 0
+            self._totalpreroundpot = 0
+            self._num_not_fold_player = 0
         else:
             # compute hand ranks
             for player in players:
@@ -445,9 +456,11 @@ class TexasHoldemEnv(Env, utils.EzPickle):
             temp_pots = [pot for pot in self._side_pots if pot > 0]
 
             # compute who wins each side pot and pay winners
-            for pot_idx,_ in enumerate(temp_pots):
+            for pot_idx, _ in enumerate(temp_pots):
                 # find players involved in given side_pot, compute the winner(s)
                 pot_contributors = [p for p in players if p.lastsidepot >= pot_idx]
+                if not pot_contributors:
+                    pot_contributors = [p for p in players]
                 winning_rank = min([p.handrank for p in pot_contributors])
                 self.winning_players = [p for p in pot_contributors if p.handrank == winning_rank]
 
@@ -472,6 +485,8 @@ class TexasHoldemEnv(Env, utils.EzPickle):
         self.community = []
         self._current_sidepot = 0
         self._totalpot = 0
+        self._totalpreroundpot = 0
+        self._num_not_fold_player = 0
         self._side_pots = [0] * len(self._seats)
         self._deck.shuffle()
         self.round_holder = -1
@@ -495,6 +510,7 @@ class TexasHoldemEnv(Env, utils.EzPickle):
             'player_id': current_player.player_id,
             'lastraise': self._lastraise,
             'minraise': max(self._bigblind, self._tocall),
+            'preroundpot': self._totalpreroundpot
         }
 
     def _pad(self, l, n, v):
@@ -530,7 +546,9 @@ class TexasHoldemEnv(Env, utils.EzPickle):
             int(self._lastraise),
             int(self._roundpot),
             int(self._tocall),
-            int(self._current_player.player_id)
+            int(self._current_player.player_id),
+            int(self._totalpreroundpot),
+            int(self._num_not_fold_player),
         )
         return STATE(tuple(player_states), community_states, self._pad(self.community, 5, -1))
 

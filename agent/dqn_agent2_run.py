@@ -63,6 +63,9 @@ class Action():
             max_call = win_rate * round_bet
             bet_amount = win_rate * round_bet
 
+        if win_rate <= 0.5:
+            return self.Fold()
+
         if bet_amount < min_bet:
             bet_amount = min_bet
         if max_call < min_bet:
@@ -79,10 +82,10 @@ class Action():
         if max_call < min_bet:
             return self.Fold()
         else:
-            print("BET")
+            print("CHECK")
             return 2, ACTION(action_table.CHECK, min_bet)
 
-class dqnModel():
+class dqnModel_run():
     bot = MonteCarloBot()
     # https://keon.io/deep-q-learning/
 
@@ -99,14 +102,14 @@ class dqnModel():
         self.learning_rate = 0.001
         self.model = self._build_model()
         self.target_model = self._build_model()
-        self.ModelDir = 'Model/'
+        self.ModelDir = 'Model_run/'
         self.ModelName = 'DQNmodel.h5'
 
         self.win_rate = 0
         
         self.memory = deque(maxlen=2000)
         self.gamma = 0.95    # discount rate
-        self.epsilon = 0.5  # exploration rate
+        self.epsilon = 0.08  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001

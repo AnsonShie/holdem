@@ -42,7 +42,7 @@ lastsidepot, (numer), resolve when someone all in  <NOT USING NOW>
 reloadCount, (number), only used when TM's version <ONLY TM USED>
 hand, (list), information about two card <IN TREYS FORMAT>
 '''
-COMMUNITY_STATE = namedtuple('community_state', ['round', 'button', 'smallblind', 'bigblind', 'totalpot', 'lastraise', 'call_price', 'to_call', 'current_player'])
+COMMUNITY_STATE = namedtuple('community_state', ['round', 'button', 'smallblind', 'bigblind', 'totalpot', 'lastraise', 'call_price', 'to_call', 'current_player', 'total_preround_pot', 'num_not_fold_player'])
 '''
 round, (number), current round number beginning from zero
 button, (id), the id of bigblind {e.g. button(id=0), smallblind(id=1), bigblind(id=2) }
@@ -63,6 +63,7 @@ class action_table():
     CALL = 1
     RAISE = 2
     FOLD = 3
+    BET = 4
     NA = 0
 
 def format_action(player, action):
@@ -87,6 +88,11 @@ def format_action(player, action):
         return text
     if aid == action_table.RAISE:
         text = '^ raise, current bet: {}'.format(raise_amt)
+        if color:
+            text = colored(text, 'green')
+        return text
+    if aid == action_table.BET:
+        text = '^ bet, current bet: {}'.format(raise_amt)
         if color:
             text = colored(text, 'green')
         return text

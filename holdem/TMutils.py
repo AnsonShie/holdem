@@ -57,6 +57,11 @@ class ClientPlayer():
         self._last_player = None
         self._last_action = None
 
+        self.player_cnt = 0
+        self.bet_table = {}
+        self.round_bet_table = {}
+        self.round_bet = 0
+
         #  player_information
         self.n_seats = 10
         self.emptyseats = self.n_seats
@@ -118,7 +123,9 @@ class ClientPlayer():
             int(self._lastraise),
             int(max(self._bigblind, self._lastraise + self._tocall)),
             int(self._tocall),
-            int(my_seat)
+            int(my_seat),
+            int(self.round_bet),
+            int(self.player_cnt)
         )
         return STATE(tuple(player_states), community_states, self._pad(self.community, 5, -1))
 
@@ -149,13 +156,13 @@ class ClientPlayer():
         self._cycle += 1
 
     def __roundNameToRound(self, rounName):
-        if "Deal":
+        if rounName == "Deal":
             return 0
-        elif "Flop":
+        elif rounName == "Flop":
             return 1
-        elif "Turn":
+        elif rounName == "Turn":
             return 2
-        elif "River":
+        elif rounName == "River":
             return 3
 
     def _new_round(self):
@@ -186,7 +193,7 @@ class ClientPlayer():
                     "action" : "check"
                 }
             }))
-        elif model_action.action == action_table.RAISE:
+        elif model_action.action == action_table.BET:
             self.ws.send(json.dumps({
                 "eventName": "__action",
                 "data": {
@@ -198,7 +205,7 @@ class ClientPlayer():
             self.ws.send(json.dumps({
                 "eventName": "__action",
                 "data": {
-                    "action": "FOLD"
+                    "action": "fold"
                 }
             }))
         elif model_action.action == action_table.CALL:
@@ -233,6 +240,17 @@ class ClientPlayer():
         elif msg == "__game_prepare":
             return False
         elif msg == "__new_round":
+            self.bet_table = {}
+            table = data["table"]
+            for p in data["players"]:
+                self.bet_table[p["playerName"]] = 0
+            if table.get("smallBlind"):
+                self.bet_table[table["smallBlind"]["playerName"]] = table["smallBlind"]["amount"]
+            if table.get("bigBlind"):
+                self.bet_table[table["bigBlind"]["playerName"]] = table["bigBlind"]["amount"]
+            self.round_bet = 0
+            self.round_bet_table = {}
+
             # No avtion, update state
             self._tocall = 0
             self._lastraise = 0
@@ -298,6 +316,9 @@ class ClientPlayer():
             return False
 
         elif msg == "__start_reload": # Might Action
+            for i, p in enumerate(data["players"]):
+                # Add New Player
+                self._add_player(i, p["chips"], p["playerName"], p["reloadCount"])
             for p in data["players"]:
                 i = self.__getPlayerSeatByName(p["playerName"])
                 player_info = self._player_dict[i]
@@ -313,6 +334,9 @@ class ClientPlayer():
             return False # not interesting
 
         elif msg == "__deal": # No Action
+            for i, p in enumerate(data["players"]):
+                # Add New Player
+                self._add_player(i, p["chips"], p["playerName"], p["reloadCount"])
             # Update player_states
             self._new_round()
 
@@ -352,6 +376,11 @@ class ClientPlayer():
             # drop data["table"]["roundCount"]
             # drop data["table"]["raiseCount"]
             # drop data["table"]["betCount"]
+
+            self.round_bet_table = self.bet_table
+            self.round_bet = 0
+            for p in self.round_bet_table.keys():
+                self.round_bet = self.round_bet + self.round_bet_table[p]
 
             return False # not interesting
 
@@ -400,6 +429,11 @@ class ClientPlayer():
                 c_cards.append(card_str_to_list(c))
             self.community = c_cards
 
+            self.player_cnt = 0
+            for p in data["game"]["players"]:
+                if p["isSurvive"] and not p["folded"]:
+                    self.player_cnt = self.player_cnt + 1
+
             # Action by model
             model_action = self._model.takeAction(self.get_current_state(), my_seat)
             self._send_action(model_action)
@@ -432,6 +466,9 @@ class ClientPlayer():
             return False # not interesting
 
         elif msg == "__show_action": # no Action
+            for i, p in enumerate(data["players"]):
+                # Add New Player
+                self._add_player(i, p["chips"], p["playerName"], p["reloadCount"])
             actioned_id = self.__getPlayerSeatByName(data["action"]["playerName"])
             self._current_player = actioned_id
 
@@ -451,9 +488,8 @@ class ClientPlayer():
                 if self._debug:
                     print('[DEBUG] Player', self._current_player, data["action"]["action"], data["action"]["amount"])
             elif data["action"]["action"] == "check":
-                self._player_bet(player_info, data["action"]["amount"])
                 if self._debug:
-                    print('[DEBUG] Player', self._current_player, "check", data["action"]["amount"])
+                    print('[DEBUG] Player', self._current_player, "check")
             elif data["action"]["action"] == "call":
                 self._tocall = data["action"]["amount"]
                 self._player_bet(player_info, self._tocall)
@@ -497,6 +533,13 @@ class ClientPlayer():
             # Not going to check name twice
             self._smallblind = int(data["table"]["smallBlind"]["amount"])
             self._bigblind = int(data["table"]["bigBlind"]["amount"])
+
+            action_name = data["action"]["playerName"]
+            if self._last_action == "call" or self._last_action == "raise" or self._last_action == "bet" or self._last_action == "allin":
+                action_amount = data["action"].get("amount")
+                if self.bet_table.get(action_name) is not None:
+                    self.bet_table[action_name] = self.bet_table[action_name] + action_amount
+
 
             return False # not interesting
 

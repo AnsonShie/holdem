@@ -38,6 +38,7 @@ class Player(object):
     CALL = 1
     RAISE = 2
     FOLD = 3
+    BET = 4
 
     def __init__(self, player_id, stack=1000, emptyplayer=False, playername="", reloadCount=0, roundRaiseLimit=4):
         assert player_id >= 0
@@ -128,10 +129,24 @@ class Player(object):
                     raise_amount = self.stack
                 move_tuple = ('raise', raise_amount)
                 self._roundRaiseCount += 1
+        elif action_idx == Player.BET:
+            if self._roundRaiseCount >= self._roundRaiseLimit:
+                move_tuple = ('call', tocall)
+                self.logger.info("warning: raise limit reached, change action to call.")
+            else:
+                if raise_amount < minraise:
+                    raise_amount = minraise
+                if raise_amount > self.stack:
+                    raise_amount = self.stack
+                move_tuple = ('bet', raise_amount)
+                self._roundRaiseCount += 1
         elif action_idx == Player.CHECK:
             move_tuple = ('check', 0)
         elif action_idx == Player.CALL:
-            move_tuple = ('call', tocall)
+            if tocall == 0:
+                move_tuple = ('check', 0)
+            else:
+                move_tuple = ('call', tocall)
         elif action_idx == Player.FOLD:
             move_tuple = ('fold', -1)
         self.logger.info("player_move: {}".format(move_tuple))
