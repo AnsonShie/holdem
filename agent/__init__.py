@@ -2,9 +2,11 @@ from .idiotAgent import idiotModel
 from .debugAgent import debugModel
 #from .dqn_agent import dqnModel
 from .dqn_agent2 import dqnModel
+from .dqn_agent2_run import dqnModel_run
 from .allfoldAgent import allFoldModel
 from .allcallAgent import allCallModel
 from .allinAgent import allinModel
 from .allraiseAgent import allRaiseModel
+from .mcAgent import mcModel
 #from .sarsaAgent import sarsaModel
 #from .sarsa2Agent import sarsa2Model
